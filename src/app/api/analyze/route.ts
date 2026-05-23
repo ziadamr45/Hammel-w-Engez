@@ -8,9 +8,9 @@ import {
   canPreviewFile,
   formatFileSize,
   type AnalysisResult,
+  type QualityOption,
 } from '@/lib/file-utils';
-
-const VIDEO_EXTRACTOR_PORT = 3031;
+import { extractVideoInfo } from '@/lib/video-extractor';
 
 // Known social media / video platform domains
 const SOCIAL_MEDIA_DOMAINS = [
@@ -32,15 +32,10 @@ const SOCIAL_MEDIA_DOMAINS = [
   'streamable.com',
   'tumblr.com',
   '9gag.com',
-  'steam.com', 'steampowered.com',
-  'loom.com',
-  'wistia.com',
   'rumble.com',
   'bitchute.com',
   'odysee.com',
-  'rumble.com',
   'kick.com',
-  'clips.twitch.tv',
 ];
 
 function isSocialMediaUrl(url: string): boolean {
@@ -78,12 +73,12 @@ export async function POST(request: NextRequest) {
 
     const isSocial = isSocialMediaUrl(url);
 
-    // If social media URL, always use yt-dlp extractor
+    // If social media URL, use the video extractor
     if (isSocial) {
       return await handleSocialMediaUrl(url);
     }
 
-    // For non-social URLs, try direct link detection first
+    // For non-social URLs, try direct link detection
     return await handleDirectUrl(url);
   } catch (error) {
     console.error('Analysis error:', error);
@@ -95,169 +90,114 @@ export async function POST(request: NextRequest) {
 }
 
 async function handleSocialMediaUrl(url: string) {
-  // Try yt-dlp extractor service
-  let extractorData: {
-    success: boolean;
-    platform: string;
-    platformKey: string;
-    title: string;
-    description: string;
-    duration: number;
-    thumbnail: string;
-    uploader: string;
-    channel: string;
-    viewCount: number;
-    likeCount: number;
-    categories: string[];
-    isLive: boolean;
-    formats: {
-      best: {
-        formatId: string;
-        url: string;
-        ext: string;
-        height: number;
-        width: number;
-        filesize: number | null;
-        filesizeApprox: number | null;
-        vcodec: string;
-        acodec: string;
-        vbr: number | null;
-        abr: number | null;
-        isBest: boolean;
-      } | null;
-      bestVideo: {
-        formatId: string;
-        url: string;
-        ext: string;
-        height: number;
-      } | null;
-      bestAudio: {
-        formatId: string;
-        url: string;
-        ext: string;
-        abr: number | null;
-      } | null;
-      allFormats: Array<{
-        formatId: string;
-        url: string;
-        ext: string;
-        height: number | null;
-        width: number | null;
-        filesize: number | null;
-        filesizeApprox: number | null;
-        vcodec: string;
-        acodec: string;
-        isBest: boolean;
-        isBestAudio: boolean;
-      }>;
-    };
-    error?: string;
-  } | null = null;
+  // Use the video extractor utility (works on Vercel for YouTube!)
+  const extraction = await extractVideoInfo(url);
 
-  try {
-    const extractRes = await fetch(`http://localhost:${VIDEO_EXTRACTOR_PORT}/api/extract?XTransformPort=${VIDEO_EXTRACTOR_PORT}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url }),
-      signal: AbortSignal.timeout(90000),
-    });
-
-    if (extractRes.ok) {
-      extractorData = await extractRes.json();
-    }
-  } catch (err) {
-    console.error('Video extractor service unavailable:', err);
-  }
-
-  if (!extractorData?.success) {
+  if (!extraction.success) {
     return NextResponse.json({
-      error: extractorData?.error
-        ? `لم نتمكن من استخراج الفيديو: ${extractorData.error}`
-        : 'لم نتمكن من تحليل هذا الرابط. تأكد أن الرابط صحيح ومن منصة مدعومة.',
+      error: extraction.error || 'لم نتمكن من تحليل هذا الرابط. تأكد أن الرابط صحيح ومن منصة مدعومة.',
       errorEn: 'Could not analyze this URL. Make sure the link is valid and from a supported platform.',
     }, { status: 422 });
   }
 
   // Build quality options from available formats
-  const qualityOptions: AnalysisResult['qualityOptions'] = [];
+  const qualityOptions: QualityOption[] = [];
 
-  // Add best combined format
-  if (extractorData.formats.best?.url) {
-    qualityOptions.push({
-      label: `${extractorData.formats.best.height}p (أفضل جودة - فيديو+صوت)`,
-      quality: `${extractorData.formats.best.height}p`,
-      formatId: extractorData.formats.best.formatId,
-      ext: extractorData.formats.best.ext || 'mp4',
-      hasVideo: true,
-      hasAudio: true,
-      height: extractorData.formats.best.height,
-      fileSize: extractorData.formats.best.filesizeApprox
-        ? formatFileSize(extractorData.formats.best.filesizeApprox)
-        : null,
-    });
-  }
+  // Add combined formats (video+audio)
+  const combinedFormats = extraction.formats.allFormats
+    .filter(f => f.hasVideo && f.hasAudio && f.url)
+    .sort((a, b) => (b.height || 0) - (a.height || 0));
 
-  // Add other formats with unique heights
   const seenHeights = new Set<number>();
-  if (extractorData.formats.best?.height) seenHeights.add(extractorData.formats.best.height);
 
-  const formatsWithUrl = extractorData.formats.allFormats.filter(f => f.url && f.height);
-
-  // Sort by height descending
-  const sortedFormats = [...formatsWithUrl].sort((a, b) => (b.height || 0) - (a.height || 0));
-
-  for (const fmt of sortedFormats) {
+  // Best combined first
+  for (const fmt of combinedFormats) {
     if (fmt.height && !seenHeights.has(fmt.height)) {
       seenHeights.add(fmt.height);
-      const hasVideo = fmt.vcodec !== 'none' && fmt.vcodec !== '';
-      const hasAudio = fmt.acodec !== 'none' && fmt.acodec !== '';
-
       qualityOptions.push({
-        label: `${fmt.height}p${hasVideo && hasAudio ? ' (فيديو+صوت)' : hasVideo ? ' (فيديو فقط)' : ' (صوت فقط)'}`,
+        label: `${fmt.height}p (فيديو+صوت)`,
         quality: `${fmt.height}p`,
         formatId: fmt.formatId,
         ext: fmt.ext || 'mp4',
-        hasVideo,
-        hasAudio,
+        hasVideo: true,
+        hasAudio: true,
         height: fmt.height,
-        fileSize: fmt.filesizeApprox ? formatFileSize(fmt.filesizeApprox) : null,
+        fileSize: fmt.fileSizeApprox ? formatFileSize(fmt.fileSizeApprox) : null,
       });
     }
   }
 
-  // Limit to top 8 qualities
-  const limitedQualities = qualityOptions.slice(0, 8);
+  // Add video-only formats
+  const videoOnlyFormats = extraction.formats.allFormats
+    .filter(f => f.hasVideo && !f.hasAudio && f.url)
+    .sort((a, b) => (b.height || 0) - (a.height || 0));
 
-  // Duration formatting
-  const duration = extractorData.duration || 0;
+  for (const fmt of videoOnlyFormats) {
+    if (fmt.height && !seenHeights.has(fmt.height)) {
+      seenHeights.add(fmt.height);
+      qualityOptions.push({
+        label: `${fmt.height}p (فيديو فقط)`,
+        quality: `${fmt.height}p`,
+        formatId: fmt.formatId,
+        ext: fmt.ext || 'mp4',
+        hasVideo: true,
+        hasAudio: false,
+        height: fmt.height,
+        fileSize: fmt.fileSizeApprox ? formatFileSize(fmt.fileSizeApprox) : null,
+      });
+    }
+  }
+
+  // Add audio-only formats
+  const audioOnlyFormats = extraction.formats.allFormats
+    .filter(f => !f.hasVideo && f.hasAudio && f.url)
+    .sort((a, b) => (b.bitrate || 0) - (a.bitrate || 0));
+
+  for (const fmt of audioOnlyFormats.slice(0, 2)) {
+    qualityOptions.push({
+      label: `${fmt.quality} (صوت فقط)`,
+      quality: fmt.quality,
+      formatId: fmt.formatId,
+      ext: fmt.ext || 'mp4',
+      hasVideo: false,
+      hasAudio: true,
+      height: null,
+      fileSize: fmt.fileSizeApprox ? formatFileSize(fmt.fileSizeApprox) : null,
+    });
+  }
+
+  // Limit to top 10 qualities
+  const limitedQualities = qualityOptions.slice(0, 10);
+
+  // Duration
+  const duration = extraction.duration || 0;
 
   const result: AnalysisResult = {
     url,
-    filename: extractorData.title || extractFilenameFromUrl(url),
-    extension: extractorData.formats.best?.ext || 'mp4',
+    filename: extraction.title || extractFilenameFromUrl(url),
+    extension: extraction.formats.best?.ext || 'mp4',
     category: 'video',
     mimeType: 'video/mp4',
-    fileSize: extractorData.formats.best?.filesizeApprox
-      ? formatFileSize(extractorData.formats.best.filesizeApprox)
+    fileSize: extraction.formats.best?.fileSizeApprox
+      ? formatFileSize(extraction.formats.best.fileSizeApprox)
       : null,
-    fileSizeBytes: extractorData.formats.best?.filesizeApprox || null,
+    fileSizeBytes: extraction.formats.best?.fileSizeApprox || null,
     isDirectLink: true,
     canPreview: true,
-    source: extractorData.platform || detectSource(url),
-    thumbnailUrl: extractorData.thumbnail || null,
-    // Extractor data
-    extractorTitle: extractorData.title,
-    extractorThumbnail: extractorData.thumbnail,
+    source: extraction.platform.nameAr || detectSource(url),
+    thumbnailUrl: extraction.thumbnail || null,
+    extractorTitle: extraction.title,
+    extractorThumbnail: extraction.thumbnail,
     extractorPlatform: {
-      key: extractorData.platformKey,
-      name: extractorData.platform,
-      nameAr: extractorData.platform,
+      key: extraction.platform.key,
+      name: extraction.platform.nameAr,
+      nameAr: extraction.platform.nameAr,
     },
     extractorDuration: duration,
-    extractorUploader: extractorData.uploader || extractorData.channel,
-    extractorViewCount: extractorData.viewCount,
-    extractorLikeCount: extractorData.likeCount,
-    extractorDescription: extractorData.description,
+    extractorUploader: extraction.uploader,
+    extractorViewCount: extraction.viewCount,
+    extractorLikeCount: extraction.likeCount,
+    extractorDescription: extraction.description,
     qualityOptions: limitedQualities,
     needsExtractorDownload: true,
     originalUrl: url,
@@ -300,26 +240,9 @@ async function handleDirectUrl(url: string) {
     // HEAD request failed
   }
 
-  // If not a direct link, try the extractor as fallback
-  if (!isDirectLink) {
-    try {
-      const extractRes = await fetch(`http://localhost:${VIDEO_EXTRACTOR_PORT}/api/extract?XTransformPort=${VIDEO_EXTRACTOR_PORT}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url }),
-        signal: AbortSignal.timeout(60000),
-      });
-
-      if (extractRes.ok) {
-        const extractorData = await extractRes.json();
-        if (extractorData.success) {
-          // It's a social media / video platform link - redirect to social handler
-          return await handleSocialMediaUrl(url);
-        }
-      }
-    } catch {
-      // Extractor unavailable
-    }
+  // If not a direct link, try the video extractor as fallback
+  if (!isDirectLink && isSocialMediaUrl(url)) {
+    return await handleSocialMediaUrl(url);
   }
 
   // Extract filename and extension
