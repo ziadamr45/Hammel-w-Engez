@@ -108,7 +108,7 @@ Hammel-w-Engez/
 
 <div align="center">
 
-Made with ❤️ by [Ziad Amr](https://github.com/ziadamr45)
+Ziad Amr
 
 </div>
 
@@ -202,6 +202,6 @@ Contributions are welcome! Feel free to open issues or submit pull requests.
 
 <div align="center">
 
-Made with ❤️ by [Ziad Amr](https://github.com/ziadamr45)
+Ziad Amr
 
 </div>
