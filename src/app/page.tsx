@@ -6,7 +6,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Download,
   Settings,
-  Rocket,
   ListPlus,
   Shield,
   Zap,
@@ -98,39 +97,29 @@ function AppContent() {
     [setIsAnalyzing, setAnalysisError]
   );
 
-  // Download file
+  // Download file - saves to history only, actual download is handled by AnalysisCard
   const handleDownload = useCallback(
-    async (result: AnalysisResult, customFilename?: string, downloadUrl?: string) => {
+    async (result: AnalysisResult, customFilename?: string, _downloadUrl?: string) => {
       try {
-        const actualUrl = downloadUrl || result.url;
         const res = await fetch('/api/download', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            url: actualUrl,
-            originalUrl: result.url,
+            url: result.originalUrl || result.url,
+            originalUrl: result.originalUrl || result.url,
             filename: customFilename || result.filename,
             category: result.category,
             source: result.extractorPlatform?.name || result.source,
+            thumbnailUrl: result.extractorThumbnail || result.thumbnailUrl,
           }),
         });
 
         if (res.ok) {
           const data = await res.json();
           addDownload(data);
-
-          // Trigger browser download
-          const a = document.createElement('a');
-          a.href = actualUrl;
-          a.download = customFilename || result.filename;
-          a.target = '_blank';
-          a.rel = 'noopener noreferrer';
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
         }
       } catch (error) {
-        console.error('Download failed:', error);
+        console.error('Download record failed:', error);
       }
     },
     [addDownload]
@@ -153,7 +142,7 @@ function AppContent() {
                   حمل و انجز
                 </h1>
                 <p className="text-[10px] text-muted-foreground -mt-0.5 font-medium">
-                  حمّل أي ملف من أي رابط
+                  حمّل من أي منصة في العالم
                 </p>
               </div>
             </div>
@@ -235,13 +224,13 @@ function AppContent() {
                   <span className="bg-gradient-to-l from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent"> من أي رابط</span>
                 </motion.h2>
                 <motion.p
-                  className="text-muted-foreground text-sm sm:text-base max-w-xl mx-auto leading-relaxed"
+                  className="text-muted-foreground text-sm sm:text-base max-w-2xl mx-auto leading-relaxed"
                   initial={{ opacity: 0, y: 15 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3, duration: 0.5 }}
                 >
-                  الصق رابط الفيديو أو الصورة أو أي ملف، وسنقوم بتحليله وتحميله لك
-                  بدون علامة مائية — سريع، آمن، ومجاني
+                  حمّل الفيديوهات من أي منصة في العالم — يوتيوب، تيك توك، فيسبوك، انستجرام، كواي، سناب شات، وأكثر من 1800 منصة
+                  <span className="text-primary font-medium"> بدون علامة مائية</span>
                 </motion.p>
               </motion.div>
 
@@ -277,33 +266,71 @@ function AppContent() {
             )}
           </AnimatePresence>
 
-          {/* Features grid (when no analysis) */}
+          {/* Features grid + Supported platforms (when no analysis) */}
           {!analysisResult && (
-            <section className="max-w-5xl mx-auto px-4 sm:px-6 pb-10">
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                {[
-                  { icon: Zap, label: 'تحميل فائق السرعة', desc: 'بدون انتظار', gradient: 'from-amber-500/10 to-orange-500/10', iconColor: 'text-amber-600 dark:text-amber-400' },
-                  { icon: Shield, label: 'بدون علامة مائية', desc: 'ملف نظيف 100%', gradient: 'from-emerald-500/10 to-teal-500/10', iconColor: 'text-emerald-600 dark:text-emerald-400' },
-                  { icon: Globe, label: 'كل المنصات', desc: 'TikTok, YouTube...', gradient: 'from-rose-500/10 to-pink-500/10', iconColor: 'text-rose-600 dark:text-rose-400' },
-                  { icon: ArrowDownToLine, label: 'كل الأنواع', desc: 'فيديو، صور، صوت...', gradient: 'from-violet-500/10 to-purple-500/10', iconColor: 'text-violet-600 dark:text-violet-400' },
-                ].map((feature, index) => (
-                  <motion.div
-                    key={feature.label}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.4 + index * 0.08, duration: 0.5 }}
-                    whileHover={{ y: -2, transition: { duration: 0.2 } }}
-                    className="flex flex-col items-center gap-2.5 p-5 rounded-2xl bg-card border border-border/50 text-center hover:border-primary/20 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300"
-                  >
-                    <div className={`flex items-center justify-center w-11 h-11 rounded-xl bg-gradient-to-br ${feature.gradient}`}>
-                      <feature.icon className={`w-5 h-5 ${feature.iconColor}`} />
-                    </div>
-                    <p className="text-sm font-semibold">{feature.label}</p>
-                    <p className="text-[11px] text-muted-foreground leading-tight">{feature.desc}</p>
-                  </motion.div>
-                ))}
-              </div>
-            </section>
+            <>
+              <section className="max-w-5xl mx-auto px-4 sm:px-6 pb-8">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  {[
+                    { icon: Zap, label: 'تحميل فائق السرعة', desc: 'بدون انتظار أو تأخير', gradient: 'from-amber-500/10 to-orange-500/10', iconColor: 'text-amber-600 dark:text-amber-400' },
+                    { icon: Shield, label: 'بدون علامة مائية', desc: 'ملف نظيف 100%', gradient: 'from-emerald-500/10 to-teal-500/10', iconColor: 'text-emerald-600 dark:text-emerald-400' },
+                    { icon: Globe, label: '+1800 منصة مدعومة', desc: 'YouTube, TikTok, Facebook...', gradient: 'from-rose-500/10 to-pink-500/10', iconColor: 'text-rose-600 dark:text-rose-400' },
+                    { icon: ArrowDownToLine, label: 'اختر الجودة', desc: '360p حتى 4K', gradient: 'from-violet-500/10 to-purple-500/10', iconColor: 'text-violet-600 dark:text-violet-400' },
+                  ].map((feature, index) => (
+                    <motion.div
+                      key={feature.label}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.4 + index * 0.08, duration: 0.5 }}
+                      whileHover={{ y: -2, transition: { duration: 0.2 } }}
+                      className="flex flex-col items-center gap-2.5 p-5 rounded-2xl bg-card border border-border/50 text-center hover:border-primary/20 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300"
+                    >
+                      <div className={`flex items-center justify-center w-11 h-11 rounded-xl bg-gradient-to-br ${feature.gradient}`}>
+                        <feature.icon className={`w-5 h-5 ${feature.iconColor}`} />
+                      </div>
+                      <p className="text-sm font-semibold">{feature.label}</p>
+                      <p className="text-[11px] text-muted-foreground leading-tight">{feature.desc}</p>
+                    </motion.div>
+                  ))}
+                </div>
+              </section>
+
+              {/* Supported platforms */}
+              <section className="max-w-5xl mx-auto px-4 sm:px-6 pb-10">
+                <motion.div
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.7, duration: 0.5 }}
+                  className="text-center"
+                >
+                  <p className="text-xs text-muted-foreground mb-3">المنصات المدعومة</p>
+                  <div className="flex flex-wrap items-center justify-center gap-2">
+                    {[
+                      { name: 'YouTube', color: 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20' },
+                      { name: 'TikTok', color: 'bg-gray-800/10 text-gray-700 dark:text-gray-300 border-gray-500/20' },
+                      { name: 'Facebook', color: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20' },
+                      { name: 'Instagram', color: 'bg-pink-500/10 text-pink-600 dark:text-pink-400 border-pink-500/20' },
+                      { name: 'Twitter / X', color: 'bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/20' },
+                      { name: 'Snapchat', color: 'bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 border-yellow-500/20' },
+                      { name: 'Kwai', color: 'bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20' },
+                      { name: 'Likee', color: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20' },
+                      { name: 'Vimeo', color: 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/20' },
+                      { name: 'Reddit', color: 'bg-orange-600/10 text-orange-700 dark:text-orange-400 border-orange-600/20' },
+                      { name: 'SoundCloud', color: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20' },
+                      { name: 'Pinterest', color: 'bg-red-600/10 text-red-700 dark:text-red-300 border-red-600/20' },
+                      { name: '+1800 منصة أخرى', color: 'bg-primary/10 text-primary border-primary/20' },
+                    ].map((platform) => (
+                      <span
+                        key={platform.name}
+                        className={`inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-medium border ${platform.color}`}
+                      >
+                        {platform.name}
+                      </span>
+                    ))}
+                  </div>
+                </motion.div>
+              </section>
+            </>
           )}
 
           {/* Downloads History */}
@@ -321,7 +348,7 @@ function AppContent() {
               </div>
               <span className="font-medium">حمل و انجز © {new Date().getFullYear()}</span>
             </div>
-            <p>تحميل سريع وآمن من أي رابط مباشر — بدون علامة مائية</p>
+            <p>تحميل سريع وآمن من أي منصة — بدون علامة مائية — +1800 منصة مدعومة</p>
           </div>
         </footer>
 

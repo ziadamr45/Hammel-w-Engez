@@ -50,6 +50,17 @@ export const FILE_CATEGORIES = {
 
 export type FileCategory = keyof typeof FILE_CATEGORIES;
 
+export interface QualityOption {
+  label: string;
+  quality: string;
+  formatId: string;
+  ext: string;
+  hasVideo: boolean;
+  hasAudio: boolean;
+  height: number | null;
+  fileSize: string | null;
+}
+
 export interface AnalysisResult {
   url: string;
   filename: string;
@@ -63,10 +74,22 @@ export interface AnalysisResult {
   source: string | null;
   thumbnailUrl: string | null;
   // Extra data from video extractor service
-  extractorVideos?: Array<{ url: string; quality?: string; mimeType?: string }>;
   extractorTitle?: string | null;
   extractorThumbnail?: string | null;
   extractorPlatform?: { key: string; name: string; nameAr: string } | null;
+  extractorDuration?: number;
+  extractorUploader?: string | null;
+  extractorViewCount?: number;
+  extractorLikeCount?: number;
+  extractorDescription?: string | null;
+  // Quality selection for social media
+  qualityOptions?: QualityOption[];
+  // Whether this needs yt-dlp to get the actual download URL
+  needsExtractorDownload?: boolean;
+  // The original URL (before any extraction)
+  originalUrl?: string;
+  // Deprecated - kept for backward compat
+  extractorVideos?: Array<{ url: string; quality?: string; mimeType?: string }>;
 }
 
 // Detect file category from extension
