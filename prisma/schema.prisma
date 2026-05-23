@@ -1,0 +1,41 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model DownloadItem {
+  id              String   @id @default(cuid())
+  url             String
+  filename        String
+  originalFilename String
+  fileType        String   // video, image, audio, document, archive, unknown
+  extension       String
+  fileSize        String?  // Human readable size
+  fileSizeBytes   Int?
+  mimeType        String?
+  category        String   // auto-classified category
+  isFavorite      Boolean  @default(false)
+  status          String   @default("completed") // analyzing, downloading, completed, failed
+  thumbnailUrl    String?
+  source          String?  // tiktok, youtube, facebook, direct, etc.
+  notes           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Settings {
+  id                String  @id @default("default")
+  theme             String  @default("system") // light, dark, system
+  language          String  @default("ar") // ar, en
+  autoClassify      Boolean @default(true)
+  showNotifications Boolean @default(true)
+  defaultFolder     String  @default("التحميلات")
+  batchSize         Int     @default(3)
+}
