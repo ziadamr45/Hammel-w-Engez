@@ -100,15 +100,18 @@ function AppContent() {
 
   // Download file
   const handleDownload = useCallback(
-    async (result: AnalysisResult, customFilename?: string) => {
+    async (result: AnalysisResult, customFilename?: string, downloadUrl?: string) => {
       try {
+        const actualUrl = downloadUrl || result.url;
         const res = await fetch('/api/download', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            url: result.url,
+            url: actualUrl,
+            originalUrl: result.url,
             filename: customFilename || result.filename,
             category: result.category,
+            source: result.extractorPlatform?.name || result.source,
           }),
         });
 
@@ -118,7 +121,7 @@ function AppContent() {
 
           // Trigger browser download
           const a = document.createElement('a');
-          a.href = result.url;
+          a.href = actualUrl;
           a.download = customFilename || result.filename;
           a.target = '_blank';
           a.rel = 'noopener noreferrer';

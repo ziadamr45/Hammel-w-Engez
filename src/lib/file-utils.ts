@@ -62,6 +62,11 @@ export interface AnalysisResult {
   canPreview: boolean;
   source: string | null;
   thumbnailUrl: string | null;
+  // Extra data from video extractor service
+  extractorVideos?: Array<{ url: string; quality?: string; mimeType?: string }>;
+  extractorTitle?: string | null;
+  extractorThumbnail?: string | null;
+  extractorPlatform?: { key: string; name: string; nameAr: string } | null;
 }
 
 // Detect file category from extension
