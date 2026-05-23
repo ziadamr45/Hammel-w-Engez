@@ -2,6 +2,10 @@
 
 # ⬇️ حمّل وانجز | Hammel w Engez
 
+## 📸 Screenshot
+
+![Hammel-w-Engez Screenshot](screenshot.png)
+
 ### أداة تحميل ذكية من أي رابط — بضغطة واحدة
 ### Smart universal download tool — paste any URL and download instantly
 
