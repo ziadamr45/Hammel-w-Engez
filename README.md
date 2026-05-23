@@ -2,7 +2,7 @@
 
 # ⬇️ حمّل وانجز | Hammel w Engez
 
-## 📸 Screenshot
+## 📸 لقطات الشاشة | Screenshots
 
 ![Hammel-w-Engez Screenshot](screenshot.png)
 
