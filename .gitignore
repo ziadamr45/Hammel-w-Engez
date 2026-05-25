@@ -52,3 +52,4 @@ prompt
 server.log
 # Skills directory
 /skills/node_modules/\n.next/\ndev.log\n*.log\n.env\n.env.local\n.zscripts/
+
