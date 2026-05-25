@@ -115,7 +115,6 @@ Ziad Amr
 ---
 
 
-
 ### 👨‍💻 المطور
 
 **زياد عمرو (Ziad Amr)**
@@ -134,6 +133,7 @@ Ziad Amr
 ---
 
 ## English
+
 
 **Hammel w Engez** is a full-featured web application for downloading any file from any URL with a single click. Whether it's a video, audio, image, or any other file — just paste the link and download instantly. The app supports batch downloading and automatically analyzes the URL to show file information before downloading.
 
@@ -239,3 +239,4 @@ Ziad Amr
 - 🎥 YouTube: [@alhayat_ala_eltarek](https://youtube.com/@alhayat_ala_eltarek?si=pcsc_31Kcv3Jym14)
 - 💼 LinkedIn: [ziad-amr](https://www.linkedin.com/in/ziad-amr-44633a411)
 - 📧 Email: ziad90216@gmail.com
+
