@@ -114,6 +114,25 @@ Ziad Amr
 
 ---
 
+
+
+### 👨‍💻 المطور
+
+**زياد عمرو (Ziad Amr)**
+
+- 🌐 الموقع الشخصي: [ziadamrme.vercel.app](https://ziadamrme.vercel.app)
+- 💼 GitHub: [ziadamr45](https://github.com/ziadamr45)
+- 📘 Facebook: [ziad7mr](https://www.facebook.com/ziad7mr)
+- 💬 Telegram: [@ziadamr](https://t.me/ziadamr)
+- 📸 Instagram: [ziadamr455](https://www.instagram.com/ziadamr455/)
+- 🧵 Threads: [@ziadamr455](https://www.threads.com/@ziadamr455)
+- 🐦 X: [@ziad90216](https://x.com/ziad90216)
+- 🎥 YouTube: [@alhayat_ala_eltarek](https://youtube.com/@alhayat_ala_eltarek?si=pcsc_31Kcv3Jym14)
+- 💼 LinkedIn: [ziad-amr](https://www.linkedin.com/in/ziad-amr-44633a411)
+- 📧 Email: ziad90216@gmail.com
+
+---
+
 ## English
 
 **Hammel w Engez** is a full-featured web application for downloading any file from any URL with a single click. Whether it's a video, audio, image, or any other file — just paste the link and download instantly. The app supports batch downloading and automatically analyzes the URL to show file information before downloading.
@@ -205,3 +224,18 @@ Contributions are welcome! Feel free to open issues or submit pull requests.
 Ziad Amr
 
 </div>
+
+### 👨‍💻 Developer
+
+**Ziad Amr**
+
+- 🌐 Portfolio: [ziadamrme.vercel.app](https://ziadamrme.vercel.app)
+- 💼 GitHub: [ziadamr45](https://github.com/ziadamr45)
+- 📘 Facebook: [ziad7mr](https://www.facebook.com/ziad7mr)
+- 💬 Telegram: [@ziadamr](https://t.me/ziadamr)
+- 📸 Instagram: [ziadamr455](https://www.instagram.com/ziadamr455/)
+- 🧵 Threads: [@ziadamr455](https://www.threads.com/@ziadamr455)
+- 🐦 X: [@ziad90216](https://x.com/ziad90216)
+- 🎥 YouTube: [@alhayat_ala_eltarek](https://youtube.com/@alhayat_ala_eltarek?si=pcsc_31Kcv3Jym14)
+- 💼 LinkedIn: [ziad-amr](https://www.linkedin.com/in/ziad-amr-44633a411)
+- 📧 Email: ziad90216@gmail.com
