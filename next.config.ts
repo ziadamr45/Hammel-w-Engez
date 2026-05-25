@@ -1,3 +1,4 @@
+// Deploy config for Vercel - env fallbacks for build time
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
