@@ -18,11 +18,7 @@ export const metadata: Metadata = {
   description: "موقع احترافي لتحميل الملفات من الروابط المباشرة - فيديو، صور، صوت، مستندات، وأرشيفات بدون علامة مائية",
   keywords: ["تحميل", "تنزيل", "فيديو", "صور", "TikTok", "YouTube", "Facebook", "بدون علامة مائية"],
   icons: {
-    icon: [
-      { url: "/favicon.ico", sizes: "32x32" },
-      { url: "/logo.png", type: "image/png" },
-    ],
-    apple: "/apple-icon.png",
+    icon: "/logo.svg",
   },
 };
 
