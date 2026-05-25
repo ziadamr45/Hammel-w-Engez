@@ -1,55 +1,88 @@
+<div align="center">
+
+
+## 📸 لقطات الشاشة | Screenshots
+
+![Screenshot](screenshot.png)
+
 # ⬇️ حمّل وانجز | Hammel w Engez
 
-[![License](https://img.shields.io/badge/License-Source_Available-blue)](LICENSE.md)
-[![Version](https://img.shields.io/badge/Version-1.0.0-blue)]()
-[![Website](https://img.shields.io/website?url=https://hammel-w-engez.vercel.app)](https://hammel-w-engez.vercel.app)
+### أداة تحميل ذكية من أي رابط — بضغطة واحدة
+### Smart universal download tool — paste any URL and download instantly
 
-> أداة تحميل ذكية من أي رابط — بضغطة واحدة
-> Smart universal download tool — paste any URL and download instantly
+[![Live Demo](https://img.shields.io/badge/Live-Demo-0a5c5c?style=for-the-badge&logo=vercel&logoColor=white)](https://hammel-w-engez.vercel.app)
+[![GitHub](https://img.shields.io/badge/GitHub-Repository-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/ziadamr45/Hammel-w-Engez)
 
-![Hammel-w-Engez Screenshot](screenshot.png)
+</div>
 
 ---
 
-## 🇪🇬 العربية
+## 📖 نبذة
 
-### المميزات
+<div dir="rtl">
 
-- 📥 **تحميل من أي رابط** — حمّل أي ملف من أي رابط
-- 🔄 **تحميل متعدد دفعة واحدة** — حمّل عدة ملفات في نفس الوقت
-- 🔍 **تحليل تلقائي للرابط** — معلومات الملف قبل التحميل
-- 📜 **سجل التحميلات** — تابع كل تحميلاتك السابقة
-- ⚙️ **إعدادات مخصصة** — خصّص تجربة التحميل
-- 🌙 **وضع داكن/فاتح** — اختر المظهر المناسب لك
-- 📱 **تصميم متجاوب** — يعمل على جميع الأجهزة
-- 🔒 **آمن ومحمي** — تحميل آمن ومشفر
+**حمّل وانجز** هي أداة تحميل ذكية وعالمية تتيح لك لصق أي رابط والتحميل فورًا بضغطة واحدة. يدعم التطبيق التحميل المتعدد دفعة واحدة، والتحليل التلقائي للروابط لعرض معلومات الملف قبل التحميل، بالإضافة إلى سجل كامل للتحيلات السابقة وإعدادات مخصصة. يتميز بتجربة آمنة ومشفرة مع تصميم عصري متجاوب يعمل على جميع الأجهزة.
 
-### التقنيات
+</div>
 
-- Next.js، TypeScript، Tailwind CSS، shadcn/ui، Prisma، Framer Motion، Vercel
+## ✨ المميزات
+
+| الميزة | الوصف |
+|--------|-------|
+| 📥 تحميل من أي رابط | حمّل أي ملف من أي رابط |
+| 🔄 تحميل متعدد دفعة واحدة | حمّل عدة ملفات في نفس الوقت |
+| 🔍 تحليل تلقائي للرابط | معلومات الملف قبل التحميل |
+| 📜 سجل التحميلات | تابع كل تحميلاتك السابقة |
+| ⚙️ إعدادات مخصصة | خصّص تجربة التحميل |
+| 🌙 وضع داكن/فاتح | اختر المظهر المناسب لك |
+| 📱 تصميم متجاوب | يعمل على جميع الأجهزة |
+| 🔒 آمن ومحمي | تحميل آمن ومشفر |
+
+## 🛠️ التقنيات
+
+| التقنية | الاستخدام |
+|---------|-----------|
+| ![Next.js](https://img.shields.io/badge/Next.js-000000?style=flat&logo=next.js&logoColor=white) | إطار العمل الكامل |
+| ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat&logo=typescript&logoColor=white) | تطوير آمن بالأنواع |
+| ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-06B6D4?style=flat&logo=tailwindcss&logoColor=white) | التصميم |
+| ![shadcn/ui](https://img.shields.io/badge/shadcn/ui-000000?style=flat) | مكونات واجهة المستخدم |
+| ![Prisma](https://img.shields.io/badge/Prisma-2D3748?style=flat&logo=prisma&logoColor=white) | ORM لقاعدة البيانات |
+| ![Framer Motion](https://img.shields.io/badge/Framer_Motion-0055FF?style=flat&logo=framer&logoColor=white) | الحركات والأنيميشن |
+| ![Vercel](https://img.shields.io/badge/Vercel-000000?style=flat&logo=vercel&logoColor=white) | النشر والاستضافة |
+
+## 🚀 التشغيل
+
+### المتطلبات
+
+- Node.js 18+ أو Bun
+- npm أو yarn أو bun
 
 ### التثبيت
 
 ```bash
+# استنساخ المستودع
 git clone https://github.com/ziadamr45/Hammel-w-Engez.git
 cd Hammel-w-Engez
+
+# تثبيت التبعيات
 npm install
-# إعداد .env من .env.example
+
+# إعداد متغيرات البيئة
+cp .env.example .env
+# عدّل ملف .env بالإعدادات المطلوبة
+
+# تشغيل تهجيرات قاعدة البيانات
 npx prisma migrate dev
+
+# تشغيل خادم التطوير
 npm run dev
 ```
 
-### تجربة مباشرة
+التطبيق سيعمل على `http://localhost:3000`
 
-[hammel-w-engez.vercel.app](https://hammel-w-engez.vercel.app)
+### 📜 الرخصة
 
-### المساهمة
-
-راجع [CONTRIBUTING.md](CONTRIBUTING.md)
-
-### الرخصة
-
-هذا المشروع يستخدم [رخصة عرض المصدر](LICENSE.md) — © 2026 زياد عمرو
+هذا المشروع متاح **للعرض والاطلاع فقط**. لا يمكن نسخ الكود أو إعادة إنتاجه أو استخدامه في مشاريع أخرى.
 
 ---
 
@@ -76,45 +109,69 @@ npm run dev
 
 ---
 
-## 🌐 English
+## English
+
+
+**Hammel w Engez** is a smart universal download tool that lets you paste any URL and download instantly with a single click. The app supports batch downloads for multiple files at once, automatic URL analysis to show file information before downloading, a complete download history, and customizable settings. It provides a secure and encrypted experience with a modern responsive design that works on all devices.
 
 ### Features
 
-- 📥 **Download from any URL** — Download any file from any link
-- 🔄 **Batch download support** — Download multiple files at once
-- 🔍 **Automatic URL analysis** — File information before downloading
-- 📜 **Download history** — Track all your past downloads
-- ⚙️ **Customizable settings** — Customize your download experience
-- 🌙 **Dark/Light mode** — Choose your preferred theme
-- 📱 **Responsive design** — Works on all devices
-- 🔒 **Secure & safe** — Safe and encrypted downloads
+| Feature | Description |
+|---------|-------------|
+| 📥 Download from any URL | Download any file from any link |
+| 🔄 Batch download support | Download multiple files at once |
+| 🔍 Automatic URL analysis | File information before downloading |
+| 📜 Download history | Track all your past downloads |
+| ⚙️ Customizable settings | Customize your download experience |
+| 🌙 Dark/Light mode | Choose your preferred theme |
+| 📱 Responsive design | Works on all devices |
+| 🔒 Secure & safe | Safe and encrypted downloads |
 
-### Technologies
+### Tech Stack
 
-- Next.js, TypeScript, Tailwind CSS, shadcn/ui, Prisma, Framer Motion, Vercel
+| Technology | Purpose |
+|------------|---------|
+| ![Next.js](https://img.shields.io/badge/Next.js-000000?style=flat&logo=next.js&logoColor=white) | Fullstack Framework |
+| ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat&logo=typescript&logoColor=white) | Type-safe Development |
+| ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-06B6D4?style=flat&logo=tailwindcss&logoColor=white) | Styling |
+| ![shadcn/ui](https://img.shields.io/badge/shadcn/ui-000000?style=flat) | UI Components |
+| ![Prisma](https://img.shields.io/badge/Prisma-2D3748?style=flat&logo=prisma&logoColor=white) | Database ORM |
+| ![Framer Motion](https://img.shields.io/badge/Framer_Motion-0055FF?style=flat&logo=framer&logoColor=white) | Animations |
+| ![Vercel](https://img.shields.io/badge/Vercel-000000?style=flat&logo=vercel&logoColor=white) | Deployment |
 
-### Installation
+### Getting Started
+
+#### Prerequisites
+
+- Node.js 18+ or Bun
+- npm, yarn, or bun
+
+#### Installation
 
 ```bash
+# Clone the repository
 git clone https://github.com/ziadamr45/Hammel-w-Engez.git
 cd Hammel-w-Engez
+
+# Install dependencies
 npm install
-# Set up .env from .env.example
+
+# Set up environment variables
+cp .env.example .env
+# Edit .env with your configuration
+
+# Run database migrations
 npx prisma migrate dev
+
+# Start development server
 npm run dev
 ```
 
-### Live Demo
-
-[hammel-w-engez.vercel.app](https://hammel-w-engez.vercel.app)
-
-### Contributing
-
-See [CONTRIBUTING.md](CONTRIBUTING.md)
+The app will be available at `http://localhost:3000`
 
 ### License
 
-This project uses [Source Available License](LICENSE.md) — © 2026 Ziad Amr
+This project is available for **viewing and reference only**. The code cannot be copied, reproduced, or used in other projects.
 
 ---
 
