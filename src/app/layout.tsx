@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
+import { ThemeProvider } from "next-themes";
 import { Toaster } from "@/components/ui/sonner";
+import "./globals.css";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -15,8 +16,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "حمل و انجز - حمّل أي ملف من أي رابط",
-  description: "موقع احترافي لتحميل الملفات من الروابط المباشرة - فيديو، صور، صوت، مستندات، وأرشيفات بدون علامة مائية",
-  keywords: ["تحميل", "تنزيل", "فيديو", "صور", "TikTok", "YouTube", "Facebook", "بدون علامة مائية"],
+  description: "موقع احترافي لتحميل الملفات من الروابط المباشرة - فيديو، صور، صوت، مستندات، وأرشيفات بدون علامة مائية من أي منصة في العالم",
+  keywords: ["تحميل", "تنزيل", "فيديو", "صور", "TikTok", "YouTube", "Facebook", "Instagram", "بدون علامة مائية"],
   icons: {
     icon: [
       { url: "/favicon.ico", sizes: "32x32" },
@@ -36,8 +37,10 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}
       >
-        {children}
-        <Toaster />
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          {children}
+          <Toaster />
+        </ThemeProvider>
       </body>
     </html>
   );

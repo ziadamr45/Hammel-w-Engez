@@ -11,10 +11,11 @@ import {
   type QualityOption,
 } from '@/lib/file-utils';
 
-// Backend API URL - points to Railway/Render server
+// Backend API URL - points to Railway server
 const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:3031';
 
 // Known social media / video platform domains
+// yt-dlp supports 1800+ platforms, but we list common ones for quick detection
 const SOCIAL_MEDIA_DOMAINS = [
   'youtube.com', 'youtu.be', 'm.youtube.com',
   'tiktok.com', 'vm.tiktok.com',
@@ -38,6 +39,17 @@ const SOCIAL_MEDIA_DOMAINS = [
   'bitchute.com',
   'odysee.com',
   'kick.com',
+  'patreon.com',
+  'weibo.com', 'weibo.cn',
+  'youku.com',
+  'nicovideo.jp',
+  'periscope.tv',
+  'mixcloud.com',
+  'bandcamp.com',
+  'media.ccc.de',
+  'peertube',
+  'arxiv.org',
+  'openload',
 ];
 
 function isSocialMediaUrl(url: string): boolean {
@@ -46,6 +58,22 @@ function isSocialMediaUrl(url: string): boolean {
     return SOCIAL_MEDIA_DOMAINS.some(domain =>
       hostname === domain || hostname.endsWith(`.${domain}`)
     );
+  } catch {
+    return false;
+  }
+}
+
+// Check if URL looks like a direct file link
+function isDirectFileUrl(url: string): boolean {
+  try {
+    const pathname = new URL(url).pathname.toLowerCase();
+    const mediaExtensions = [
+      '.mp4', '.webm', '.mov', '.avi', '.mkv', '.flv',
+      '.mp3', '.wav', '.m4a', '.ogg', '.flac', '.aac',
+      '.jpg', '.jpeg', '.png', '.webp', '.gif', '.svg',
+      '.pdf', '.docx', '.txt', '.xlsx', '.zip', '.rar',
+    ];
+    return mediaExtensions.some(ext => pathname.endsWith(ext));
   } catch {
     return false;
   }
@@ -74,13 +102,27 @@ export async function POST(request: NextRequest) {
     }
 
     const isSocial = isSocialMediaUrl(url);
+    const isDirect = isDirectFileUrl(url);
 
-    // If social media URL, proxy to the backend API
+    // If it's a social media URL, always try the backend first
+    // (yt-dlp supports 1800+ platforms)
     if (isSocial) {
       return await handleSocialMediaUrl(url);
     }
 
-    // For non-social URLs, try direct link detection (this still works on Vercel)
+    // For direct file links, try HEAD request first
+    if (isDirect) {
+      return await handleDirectUrl(url);
+    }
+
+    // For unknown URLs, try the backend first (it might be a supported platform)
+    // If backend fails, fall back to HEAD request
+    const backendResult = await handleSocialMediaUrl(url);
+    if (backendResult.status === 200) {
+      return backendResult;
+    }
+
+    // Backend couldn't handle it, try direct URL
     return await handleDirectUrl(url);
   } catch (error) {
     console.error('Analysis error:', error);
@@ -92,7 +134,7 @@ export async function POST(request: NextRequest) {
 }
 
 async function handleSocialMediaUrl(url: string) {
-  // Forward the request to the backend API server (Railway/Render)
+  // Forward the request to the backend API server (Railway)
   try {
     const backendRes = await fetch(`${BACKEND_URL}/api/extract`, {
       method: 'POST',
@@ -110,7 +152,6 @@ async function handleSocialMediaUrl(url: string) {
       }, { status: backendRes.status });
     }
 
-    // The backend returns data in our format already
     // Map quality options to our QualityOption type
     const qualityOptions: QualityOption[] = (data.qualityOptions || []).map((q: any) => ({
       label: q.label,
@@ -192,11 +233,6 @@ async function handleDirectUrl(url: string) {
     }
   } catch {
     // HEAD request failed
-  }
-
-  // If not a direct link, try the video extractor as fallback
-  if (!isDirectLink && isSocialMediaUrl(url)) {
-    return await handleSocialMediaUrl(url);
   }
 
   // Extract filename and extension

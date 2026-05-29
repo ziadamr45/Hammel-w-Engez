@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const VIDEO_EXTRACTOR_PORT = 3031;
+// Backend API URL - points to Railway server
+const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:3031';
 
-// POST: Get the actual download URL from yt-dlp for social media links
+// POST: Get download URL - forwards to backend
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -12,30 +13,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'URL is required' }, { status: 400 });
     }
 
-    // Call the video extractor service to get the download URL
-    const extractRes = await fetch(
-      `http://localhost:${VIDEO_EXTRACTOR_PORT}/api/download-url?XTransformPort=${VIDEO_EXTRACTOR_PORT}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url, formatId }),
-        signal: AbortSignal.timeout(60000),
-      }
-    );
+    // Forward to backend
+    const backendRes = await fetch(`${BACKEND_URL}/api/download-url`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url, formatId }),
+      signal: AbortSignal.timeout(60000),
+    });
 
-    if (!extractRes.ok) {
+    const data = await backendRes.json();
+
+    if (!backendRes.ok || !data.success) {
       return NextResponse.json(
-        { error: 'Failed to get download URL from extractor service' },
-        { status: 500 }
-      );
-    }
-
-    const data = await extractRes.json();
-
-    if (!data.success) {
-      return NextResponse.json(
-        { error: data.error || 'Could not extract download URL' },
-        { status: 422 }
+        { error: data.error || 'Failed to get download URL from backend' },
+        { status: backendRes.status || 500 }
       );
     }
 

@@ -96,7 +96,7 @@ export interface AnalysisResult {
 export function detectCategoryFromExtension(ext: string): FileCategory | 'unknown' {
   const normalized = ext.toLowerCase().replace('.', '');
   for (const [category, config] of Object.entries(FILE_CATEGORIES)) {
-    if (config.extensions.includes(normalized)) {
+    if ((config.extensions as readonly string[]).includes(normalized)) {
       return category as FileCategory;
     }
   }
@@ -107,7 +107,7 @@ export function detectCategoryFromExtension(ext: string): FileCategory | 'unknow
 export function detectCategoryFromMime(mime: string): FileCategory | 'unknown' {
   const lower = mime.toLowerCase();
   for (const [category, config] of Object.entries(FILE_CATEGORIES)) {
-    if (config.mimeTypes.some(m => lower.startsWith(m))) {
+    if ((config.mimeTypes as readonly string[]).some(m => lower.startsWith(m))) {
       return category as FileCategory;
     }
   }

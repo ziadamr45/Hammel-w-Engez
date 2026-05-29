@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-// Backend API URL - points to Railway/Render server
+// Backend API URL - points to Railway server
 const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:3031';
 
 // GET: Proxy download a file via the backend API
-// This redirects the download request to the backend server
-// which can handle large files and has yt-dlp available
+// The backend handles the actual file streaming with yt-dlp
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -18,7 +17,6 @@ export async function GET(request: NextRequest) {
     }
 
     // Redirect to the backend proxy-download endpoint
-    // The backend handles the actual file streaming
     const backendProxyUrl = `${BACKEND_URL}/api/proxy-download?url=${encodeURIComponent(url)}&formatId=${encodeURIComponent(formatId || '')}&filename=${encodeURIComponent(filename)}`;
 
     // Fetch from backend and stream to client
