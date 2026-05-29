@@ -10,7 +10,9 @@ import {
   type AnalysisResult,
   type QualityOption,
 } from '@/lib/file-utils';
-import { extractVideoInfo } from '@/lib/video-extractor';
+
+// Backend API URL - points to Railway/Render server
+const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:3031';
 
 // Known social media / video platform domains
 const SOCIAL_MEDIA_DOMAINS = [
@@ -73,12 +75,12 @@ export async function POST(request: NextRequest) {
 
     const isSocial = isSocialMediaUrl(url);
 
-    // If social media URL, use the video extractor
+    // If social media URL, proxy to the backend API
     if (isSocial) {
       return await handleSocialMediaUrl(url);
     }
 
-    // For non-social URLs, try direct link detection
+    // For non-social URLs, try direct link detection (this still works on Vercel)
     return await handleDirectUrl(url);
   } catch (error) {
     console.error('Analysis error:', error);
@@ -90,120 +92,72 @@ export async function POST(request: NextRequest) {
 }
 
 async function handleSocialMediaUrl(url: string) {
-  // Use the video extractor utility (works on Vercel for YouTube!)
-  const extraction = await extractVideoInfo(url);
-
-  if (!extraction.success) {
-    return NextResponse.json({
-      error: extraction.error || 'لم نتمكن من تحليل هذا الرابط. تأكد أن الرابط صحيح ومن منصة مدعومة.',
-      errorEn: 'Could not analyze this URL. Make sure the link is valid and from a supported platform.',
-    }, { status: 422 });
-  }
-
-  // Build quality options from available formats
-  const qualityOptions: QualityOption[] = [];
-
-  // Add combined formats (video+audio)
-  const combinedFormats = extraction.formats.allFormats
-    .filter(f => f.hasVideo && f.hasAudio && f.url)
-    .sort((a, b) => (b.height || 0) - (a.height || 0));
-
-  const seenHeights = new Set<number>();
-
-  // Best combined first
-  for (const fmt of combinedFormats) {
-    if (fmt.height && !seenHeights.has(fmt.height)) {
-      seenHeights.add(fmt.height);
-      qualityOptions.push({
-        label: `${fmt.height}p (فيديو+صوت)`,
-        quality: `${fmt.height}p`,
-        formatId: fmt.formatId,
-        ext: fmt.ext || 'mp4',
-        hasVideo: true,
-        hasAudio: true,
-        height: fmt.height,
-        fileSize: fmt.fileSizeApprox ? formatFileSize(fmt.fileSizeApprox) : null,
-      });
-    }
-  }
-
-  // Add video-only formats
-  const videoOnlyFormats = extraction.formats.allFormats
-    .filter(f => f.hasVideo && !f.hasAudio && f.url)
-    .sort((a, b) => (b.height || 0) - (a.height || 0));
-
-  for (const fmt of videoOnlyFormats) {
-    if (fmt.height && !seenHeights.has(fmt.height)) {
-      seenHeights.add(fmt.height);
-      qualityOptions.push({
-        label: `${fmt.height}p (فيديو فقط)`,
-        quality: `${fmt.height}p`,
-        formatId: fmt.formatId,
-        ext: fmt.ext || 'mp4',
-        hasVideo: true,
-        hasAudio: false,
-        height: fmt.height,
-        fileSize: fmt.fileSizeApprox ? formatFileSize(fmt.fileSizeApprox) : null,
-      });
-    }
-  }
-
-  // Add audio-only formats
-  const audioOnlyFormats = extraction.formats.allFormats
-    .filter(f => !f.hasVideo && f.hasAudio && f.url)
-    .sort((a, b) => (b.bitrate || 0) - (a.bitrate || 0));
-
-  for (const fmt of audioOnlyFormats.slice(0, 2)) {
-    qualityOptions.push({
-      label: `${fmt.quality} (صوت فقط)`,
-      quality: fmt.quality,
-      formatId: fmt.formatId,
-      ext: fmt.ext || 'mp4',
-      hasVideo: false,
-      hasAudio: true,
-      height: null,
-      fileSize: fmt.fileSizeApprox ? formatFileSize(fmt.fileSizeApprox) : null,
+  // Forward the request to the backend API server (Railway/Render)
+  try {
+    const backendRes = await fetch(`${BACKEND_URL}/api/extract`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url }),
+      signal: AbortSignal.timeout(120000), // 2 min timeout for large videos
     });
+
+    const data = await backendRes.json();
+
+    if (!backendRes.ok) {
+      return NextResponse.json({
+        error: data.error || 'لم نتمكن من تحليل هذا الرابط. تأكد أن الرابط صحيح ومن منصة مدعومة.',
+        errorEn: data.errorEn || 'Could not analyze this URL.',
+      }, { status: backendRes.status });
+    }
+
+    // The backend returns data in our format already
+    // Map quality options to our QualityOption type
+    const qualityOptions: QualityOption[] = (data.qualityOptions || []).map((q: any) => ({
+      label: q.label,
+      quality: q.quality,
+      formatId: q.formatId,
+      ext: q.ext,
+      hasVideo: q.hasVideo,
+      hasAudio: q.hasAudio,
+      height: q.height,
+      fileSize: q.fileSize,
+    }));
+
+    const result: AnalysisResult = {
+      url,
+      filename: data.filename || extractFilenameFromUrl(url),
+      extension: data.extension || 'mp4',
+      category: data.category || 'video',
+      mimeType: data.mimeType || 'video/mp4',
+      fileSize: data.fileSize || null,
+      fileSizeBytes: data.fileSizeBytes || null,
+      isDirectLink: data.isDirectLink || false,
+      canPreview: data.canPreview || true,
+      source: data.source || detectSource(url),
+      thumbnailUrl: data.thumbnailUrl || null,
+      extractorTitle: data.extractorTitle,
+      extractorThumbnail: data.extractorThumbnail,
+      extractorPlatform: data.extractorPlatform,
+      extractorDuration: data.extractorDuration,
+      extractorUploader: data.extractorUploader,
+      extractorViewCount: data.extractorViewCount,
+      extractorLikeCount: data.extractorLikeCount,
+      extractorDescription: data.extractorDescription,
+      qualityOptions,
+      needsExtractorDownload: true,
+      originalUrl: url,
+    };
+
+    return NextResponse.json(result);
+  } catch (error) {
+    console.error('Backend API error:', error);
+
+    // If backend is unreachable, return a helpful error
+    return NextResponse.json({
+      error: 'خدمة تحليل الفيديو غير متاحة حاليًا. جرب مرة أخرى لاحقًا.',
+      errorEn: 'Video analysis service is currently unavailable. Please try again later.',
+    }, { status: 503 });
   }
-
-  // Limit to top 10 qualities
-  const limitedQualities = qualityOptions.slice(0, 10);
-
-  // Duration
-  const duration = extraction.duration || 0;
-
-  const result: AnalysisResult = {
-    url,
-    filename: extraction.title || extractFilenameFromUrl(url),
-    extension: extraction.formats.best?.ext || 'mp4',
-    category: 'video',
-    mimeType: 'video/mp4',
-    fileSize: extraction.formats.best?.fileSizeApprox
-      ? formatFileSize(extraction.formats.best.fileSizeApprox)
-      : null,
-    fileSizeBytes: extraction.formats.best?.fileSizeApprox || null,
-    isDirectLink: true,
-    canPreview: true,
-    source: extraction.platform.nameAr || detectSource(url),
-    thumbnailUrl: extraction.thumbnail || null,
-    extractorTitle: extraction.title,
-    extractorThumbnail: extraction.thumbnail,
-    extractorPlatform: {
-      key: extraction.platform.key,
-      name: extraction.platform.nameAr,
-      nameAr: extraction.platform.nameAr,
-    },
-    extractorDuration: duration,
-    extractorUploader: extraction.uploader,
-    extractorViewCount: extraction.viewCount,
-    extractorLikeCount: extraction.likeCount,
-    extractorDescription: extraction.description,
-    qualityOptions: limitedQualities,
-    needsExtractorDownload: true,
-    originalUrl: url,
-  };
-
-  return NextResponse.json(result);
 }
 
 async function handleDirectUrl(url: string) {
