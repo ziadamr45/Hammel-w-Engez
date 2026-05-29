@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 // Backend API URL - points to Railway server
-const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:3031';
+const BACKEND_URL = process.env.BACKEND_URL || 'https://hammel-backend-production.up.railway.app';
 
-// GET: Proxy download a file via the backend API
-// The backend handles the actual file streaming with yt-dlp
+// GET: Redirect to the backend proxy-download endpoint
+// Vercel serverless has a 4.5MB response limit, so we redirect directly
+// to the backend URL instead of proxying the file through the Next.js server.
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -16,42 +17,11 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'URL is required' }, { status: 400 });
     }
 
-    // Redirect to the backend proxy-download endpoint
+    // Redirect to the backend proxy-download endpoint directly
+    // This avoids the Vercel 4.5MB serverless response limit
     const backendProxyUrl = `${BACKEND_URL}/api/proxy-download?url=${encodeURIComponent(url)}&formatId=${encodeURIComponent(formatId || '')}&filename=${encodeURIComponent(filename)}`;
 
-    // Fetch from backend and stream to client
-    const backendRes = await fetch(backendProxyUrl, {
-      headers: {
-        'Accept': '*/*',
-      },
-      redirect: 'follow',
-      signal: AbortSignal.timeout(300000), // 5 min timeout
-    });
-
-    if (!backendRes.ok) {
-      const errorData = await backendRes.json().catch(() => ({ error: 'Download failed' }));
-      return NextResponse.json(
-        { error: errorData.error || `Backend returned ${backendRes.status}` },
-        { status: backendRes.status }
-      );
-    }
-
-    // Stream the response from backend to client
-    const contentType = backendRes.headers.get('content-type') || 'application/octet-stream';
-    const contentLength = backendRes.headers.get('content-length');
-
-    const headers = new Headers();
-    headers.set('Content-Type', contentType);
-    headers.set('Content-Disposition', `attachment; filename*=UTF-8''${encodeURIComponent(filename)}`);
-    if (contentLength) {
-      headers.set('Content-Length', contentLength);
-    }
-    headers.set('Cache-Control', 'no-cache');
-
-    return new NextResponse(backendRes.body, {
-      status: 200,
-      headers,
-    });
+    return NextResponse.redirect(backendProxyUrl);
   } catch (error) {
     console.error('Proxy download error:', error);
     return NextResponse.json(

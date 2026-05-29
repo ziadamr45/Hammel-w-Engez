@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 // Backend API URL - points to Railway server
-const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:3031';
+const BACKEND_URL = process.env.BACKEND_URL || 'https://hammel-backend-production.up.railway.app';
 
 // POST: Get download URL - forwards to backend
 export async function POST(request: NextRequest) {

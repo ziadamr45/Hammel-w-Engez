@@ -1,16 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
 
-// GET settings
+// Default settings (client manages in localStorage, this returns defaults)
+const DEFAULT_SETTINGS = {
+  id: 'default',
+  theme: 'system',
+  language: 'ar',
+  autoClassify: true,
+  showNotifications: true,
+  defaultFolder: 'التحميلات',
+  batchSize: 3,
+};
+
+// GET settings - returns defaults (client overrides from localStorage)
 export async function GET() {
   try {
-    let settings = await db.settings.findUnique({ where: { id: 'default' } });
-    if (!settings) {
-      settings = await db.settings.create({
-        data: { id: 'default' },
-      });
-    }
-    return NextResponse.json(settings);
+    return NextResponse.json(DEFAULT_SETTINGS);
   } catch (error) {
     console.error('Get settings error:', error);
     return NextResponse.json(
@@ -20,27 +24,13 @@ export async function GET() {
   }
 }
 
-// PUT settings
+// PUT settings - acknowledges update (client stores in localStorage)
 export async function PUT(request: NextRequest) {
   try {
     const body = await request.json();
-    const { theme, language, autoClassify, showNotifications, defaultFolder, batchSize } = body;
 
-    const updateData: Record<string, unknown> = {};
-    if (theme !== undefined) updateData.theme = theme;
-    if (language !== undefined) updateData.language = language;
-    if (autoClassify !== undefined) updateData.autoClassify = autoClassify;
-    if (showNotifications !== undefined) updateData.showNotifications = showNotifications;
-    if (defaultFolder !== undefined) updateData.defaultFolder = defaultFolder;
-    if (batchSize !== undefined) updateData.batchSize = batchSize;
-
-    const settings = await db.settings.upsert({
-      where: { id: 'default' },
-      update: updateData,
-      create: { id: 'default', ...updateData },
-    });
-
-    return NextResponse.json(settings);
+    // Client manages settings in localStorage, just acknowledge
+    return NextResponse.json({ ...DEFAULT_SETTINGS, ...body });
   } catch (error) {
     console.error('Update settings error:', error);
     return NextResponse.json(

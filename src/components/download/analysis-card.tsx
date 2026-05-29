@@ -22,22 +22,14 @@ import {
   Play,
   Clock,
   User,
-  Eye as EyeIcon,
   Heart,
-  ChevronDown,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+
 import { FILE_CATEGORIES, type FileCategory, type QualityOption } from '@/lib/file-utils';
 import type { AnalysisResult } from '@/lib/file-utils';
 import { useState, useCallback } from 'react';
@@ -109,6 +101,8 @@ export function AnalysisCard({ result, onDownload, onClear }: AnalysisCardProps)
     setIsDownloading(true);
     setDownloadProgress(0);
 
+    // Note: Progress is simulated since actual download progress cannot be tracked
+    // when the browser navigates to a download URL
     const progressInterval = setInterval(() => {
       setDownloadProgress((prev) => {
         if (prev >= 85) { clearInterval(progressInterval); return 85; }
@@ -248,7 +242,7 @@ export function AnalysisCard({ result, onDownload, onClear }: AnalysisCardProps)
             <div className="flex items-center gap-4 mb-4 text-xs text-muted-foreground">
               {result.extractorViewCount ? (
                 <div className="flex items-center gap-1.5">
-                  <EyeIcon className="w-3.5 h-3.5" />
+                  <Eye className="w-3.5 h-3.5" />
                   <span>{formatCount(result.extractorViewCount)} مشاهدة</span>
                 </div>
               ) : null}

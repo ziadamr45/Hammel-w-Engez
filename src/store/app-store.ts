@@ -23,6 +23,40 @@ export interface DownloadRecord {
   updatedAt: string;
 }
 
+const STORAGE_KEYS = {
+  downloads: 'hammel-downloads',
+  settings: 'hammel-settings',
+} as const;
+
+const DEFAULT_SETTINGS = {
+  theme: 'system',
+  language: 'ar',
+  autoClassify: true,
+  showNotifications: true,
+  defaultFolder: 'التحميلات',
+  batchSize: 3,
+};
+
+// Safe localStorage access (SSR-safe)
+function getFromStorage<T>(key: string, fallback: T): T {
+  if (typeof window === 'undefined') return fallback;
+  try {
+    const stored = localStorage.getItem(key);
+    return stored ? JSON.parse(stored) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function setToStorage<T>(key: string, value: T): void {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch {
+    // localStorage full or unavailable
+  }
+}
+
 interface AppState {
   // Current view
   currentView: AppView;
@@ -62,18 +96,14 @@ interface AppState {
   setBatchUrls: (urls: string[]) => void;
 
   // Settings
-  settings: {
-    theme: string;
-    language: string;
-    autoClassify: boolean;
-    showNotifications: boolean;
-    defaultFolder: string;
-    batchSize: number;
-  };
-  setSettings: (settings: Partial<AppState['settings']>) => void;
+  settings: typeof DEFAULT_SETTINGS;
+  setSettings: (settings: Partial<typeof DEFAULT_SETTINGS>) => void;
+
+  // Hydration
+  hydrate: () => void;
 }
 
-export const useAppStore = create<AppState>((set) => ({
+export const useAppStore = create<AppState>((set, get) => ({
   currentView: 'home',
   setCurrentView: (view) => set({ currentView: view }),
 
@@ -85,14 +115,27 @@ export const useAppStore = create<AppState>((set) => ({
   setAnalysisError: (err) => set({ analysisError: err }),
 
   downloads: [],
-  setDownloads: (items) => set({ downloads: items }),
-  addDownload: (item) => set((state) => ({ downloads: [item, ...state.downloads] })),
-  updateDownload: (id, updates) =>
-    set((state) => ({
-      downloads: state.downloads.map((d) => (d.id === id ? { ...d, ...updates } : d)),
-    })),
-  removeDownload: (id) =>
-    set((state) => ({ downloads: state.downloads.filter((d) => d.id !== id) })),
+  setDownloads: (items) => {
+    set({ downloads: items });
+    setToStorage(STORAGE_KEYS.downloads, items);
+  },
+  addDownload: (item) => {
+    const updated = [item, ...get().downloads];
+    set({ downloads: updated });
+    setToStorage(STORAGE_KEYS.downloads, updated);
+  },
+  updateDownload: (id, updates) => {
+    const updated = get().downloads.map((d) =>
+      d.id === id ? { ...d, ...updates } : d
+    );
+    set({ downloads: updated });
+    setToStorage(STORAGE_KEYS.downloads, updated);
+  },
+  removeDownload: (id) => {
+    const updated = get().downloads.filter((d) => d.id !== id);
+    set({ downloads: updated });
+    setToStorage(STORAGE_KEYS.downloads, updated);
+  },
 
   activeFilter: 'all',
   setActiveFilter: (filter) => set({ activeFilter: filter }),
@@ -108,16 +151,17 @@ export const useAppStore = create<AppState>((set) => ({
   batchUrls: [],
   setBatchUrls: (urls) => set({ batchUrls: urls }),
 
-  settings: {
-    theme: 'system',
-    language: 'ar',
-    autoClassify: true,
-    showNotifications: true,
-    defaultFolder: 'التحميلات',
-    batchSize: 3,
+  settings: { ...DEFAULT_SETTINGS },
+  setSettings: (newSettings) => {
+    const updated = { ...get().settings, ...newSettings };
+    set({ settings: updated });
+    setToStorage(STORAGE_KEYS.settings, updated);
   },
-  setSettings: (newSettings) =>
-    set((state) => ({
-      settings: { ...state.settings, ...newSettings },
-    })),
+
+  // Hydrate from localStorage on mount
+  hydrate: () => {
+    const downloads = getFromStorage<DownloadRecord[]>(STORAGE_KEYS.downloads, []);
+    const settings = getFromStorage<typeof DEFAULT_SETTINGS>(STORAGE_KEYS.settings, DEFAULT_SETTINGS);
+    set({ downloads, settings });
+  },
 }));

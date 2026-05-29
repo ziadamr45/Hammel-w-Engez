@@ -1,6 +1,5 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Settings as SettingsIcon,
@@ -29,42 +28,11 @@ interface SettingsDialogProps {
 export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const { settings, setSettings } = useAppStore();
 
-  const fetchSettings = useCallback(async () => {
-    try {
-      const res = await fetch('/api/settings');
-      if (res.ok) {
-        const data = await res.json();
-        setSettings(data);
-      }
-    } catch (error) {
-      console.error('Failed to fetch settings:', error);
-    }
-  }, [setSettings]);
+  // All settings are managed in localStorage via the store - no API calls needed
 
-  // Fetch settings from server on open
-  useEffect(() => {
-    if (open) {
-      fetchSettings();
-    }
-  }, [open, fetchSettings]);
-
-  const saveSettings = useCallback(
-    async (updates: Partial<typeof settings>) => {
-      try {
-        const res = await fetch('/api/settings', {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(updates),
-        });
-        if (res.ok) {
-          setSettings(updates);
-        }
-      } catch (error) {
-        console.error('Failed to save settings:', error);
-      }
-    },
-    [setSettings]
-  );
+  const saveSettings = (updates: Partial<typeof settings>) => {
+    setSettings(updates);
+  };
 
   const themeOptions = [
     { key: 'light', label: 'فاتح', icon: Sun },

@@ -12,7 +12,7 @@ import {
 } from '@/lib/file-utils';
 
 // Backend API URL - points to Railway server
-const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:3031';
+const BACKEND_URL = process.env.BACKEND_URL || 'https://hammel-backend-production.up.railway.app';
 
 // Known social media / video platform domains
 // yt-dlp supports 1800+ platforms, but we list common ones for quick detection

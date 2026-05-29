@@ -28,7 +28,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAppStore, type DownloadRecord } from '@/store/app-store';
 import { FILE_CATEGORIES, type FileCategory } from '@/lib/file-utils';
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -69,51 +69,18 @@ export function DownloadsHistory() {
   const [activeTab, setActiveTab] = useState('recent');
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
-  const fetchDownloads = useCallback(async () => {
-    try {
-      const res = await fetch('/api/downloads?limit=100');
-      if (res.ok) {
-        const data = await res.json();
-        setDownloads(data);
-      }
-    } catch (error) {
-      console.error('Failed to fetch downloads:', error);
-    }
-  }, [setDownloads]);
-
-  // Fetch downloads on mount
-  useEffect(() => {
-    fetchDownloads();
-  }, [fetchDownloads]);
+  // All data is now in localStorage via the store - no API calls needed
 
   const handleToggleFavorite = useCallback(
-    async (id: string, currentVal: boolean) => {
-      try {
-        const res = await fetch(`/api/downloads/${id}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ isFavorite: !currentVal }),
-        });
-        if (res.ok) {
-          updateDownload(id, { isFavorite: !currentVal });
-        }
-      } catch (error) {
-        console.error('Failed to toggle favorite:', error);
-      }
+    (id: string, currentVal: boolean) => {
+      updateDownload(id, { isFavorite: !currentVal });
     },
     [updateDownload]
   );
 
   const handleDelete = useCallback(
-    async (id: string) => {
-      try {
-        const res = await fetch(`/api/downloads/${id}`, { method: 'DELETE' });
-        if (res.ok) {
-          removeDownload(id);
-        }
-      } catch (error) {
-        console.error('Failed to delete download:', error);
-      }
+    (id: string) => {
+      removeDownload(id);
     },
     [removeDownload]
   );
@@ -128,15 +95,8 @@ export function DownloadsHistory() {
     }
   }, []);
 
-  const handleClearHistory = useCallback(async () => {
-    try {
-      const res = await fetch('/api/downloads?action=clear-all', { method: 'DELETE' });
-      if (res.ok) {
-        setDownloads([]);
-      }
-    } catch (error) {
-      console.error('Failed to clear history:', error);
-    }
+  const handleClearHistory = useCallback(() => {
+    setDownloads([]);
   }, [setDownloads]);
 
   // Filter downloads

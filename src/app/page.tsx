@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Download,
@@ -30,31 +30,25 @@ function AppContent() {
     setAnalysisError,
     setIsAnalyzing,
     addDownload,
-    settings,
-    setSettings,
   } = useAppStore();
 
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [batchOpen, setBatchOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
-
-  const fetchSettings = useCallback(async () => {
-    try {
-      const res = await fetch('/api/settings');
-      if (res.ok) {
-        const data = await res.json();
-        setSettings(data);
-      }
-    } catch (error) {
-      console.error('Failed to fetch settings:', error);
-    }
-  }, [setSettings]);
+  const hydrate = useAppStore((s) => s.hydrate);
+  const hasHydrated = useRef(false);
 
   useEffect(() => {
-    setMounted(true);
-    fetchSettings();
-  }, [fetchSettings]);
+    // Use microtask to avoid synchronous setState in effect
+    queueMicrotask(() => {
+      setMounted(true);
+    });
+    if (!hasHydrated.current) {
+      hasHydrated.current = true;
+      hydrate(); // Load data from localStorage
+    }
+  }, [hydrate]);
 
   // Scroll to top detection
   useEffect(() => {

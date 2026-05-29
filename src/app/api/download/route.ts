@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import { extractFilenameFromUrl, extractExtension, detectCategoryFromExtension, detectSource, formatFileSize } from '@/lib/file-utils';
+import { v4 as uuidv4 } from 'uuid';
 
-// POST: Save a download and return the record
+// POST: Record a download (client stores in localStorage, this just returns the record)
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { url, filename: customFilename, category: customCategory, source: customSource, thumbnailUrl } = body;
+    const { url, filename, category, source, thumbnailUrl } = body;
 
     if (!url || typeof url !== 'string') {
       return NextResponse.json({ error: 'URL is required' }, { status: 400 });
@@ -19,35 +18,29 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid URL' }, { status: 400 });
     }
 
-    // Determine file info
-    const originalFilename = extractFilenameFromUrl(url);
-    const extension = extractExtension(customFilename || originalFilename);
-    const category = customCategory || detectCategoryFromExtension(extension) || 'unknown';
-    const source = customSource || detectSource(url);
+    // Return a download record (client stores in localStorage)
+    const now = new Date().toISOString();
+    const download = {
+      id: uuidv4(),
+      url,
+      filename: filename || 'unknown',
+      originalFilename: filename || 'unknown',
+      fileType: category || 'unknown',
+      extension: (filename || '').split('.').pop() || '',
+      fileSize: null,
+      fileSizeBytes: null,
+      mimeType: null,
+      category: category || 'unknown',
+      isFavorite: false,
+      status: 'completed',
+      thumbnailUrl: thumbnailUrl || null,
+      source: source || null,
+      notes: null,
+      createdAt: now,
+      updatedAt: now,
+    };
 
-    const filename = customFilename || originalFilename;
-
-    // Save to database
-    const download = await db.downloadItem.create({
-      data: {
-        url,
-        filename,
-        originalFilename,
-        fileType: category,
-        extension,
-        fileSize: null,
-        fileSizeBytes: null,
-        category,
-        status: 'completed',
-        source,
-        thumbnailUrl: thumbnailUrl || null,
-      },
-    });
-
-    return NextResponse.json({
-      ...download,
-      downloadUrl: url,
-    });
+    return NextResponse.json(download);
   } catch (error) {
     console.error('Download save error:', error);
     return NextResponse.json(

@@ -9,7 +9,7 @@
  */
 
 // Backend API URL
-const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:3031';
+const BACKEND_URL = process.env.BACKEND_URL || 'https://hammel-backend-production.up.railway.app';
 
 export interface ExtractedVideoInfo {
   success: boolean;
